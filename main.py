@@ -10,6 +10,30 @@ from pix2text import Pix2Text, merge_line_texts
 from streamlit_paste_button import paste_image_button as pbutton
 
 st.set_page_config(layout="wide")
+with st.expander("📕Guideline"):
+	st.markdown("""
+    **LaTex OCR**을 이용해 이미지 내의 텍스트 및 수식을 인식하여 결과를 보여주고, 간단한 편집 기능을 제공합니다.
+    - OCR(Optical Character Recognition): 이미지에서 텍스트를 인식해 편집 가능한 텍스트 형식으로 변환하는 기술
+    - LaTex: 수학 공식과 문서 구조를 정교하게 표현할 수 있도록 지원하는 마크업 언어
+             
+    #### 📌 NOTE:
+    부득이한 경우가 아니라면 사용 중 **❌절대 새로고침을 하지 마세요❌**! 모든 저장 결과가 초기화됩니다.
+             
+    #### ❓How to Use? :
+    0. **이미지 캡처 단축키**: (Window) Window + Shift + S / (Mac) Shift + ⌘ + 4 
+    1. **이미지 입력**: 이미지 캡처 후, 다운 받을 필요 없이 `🖼️ Paste LaTex & English image` 버튼을 누르면 클립보드에 있는 이미지가 자동으로 불러와집니다.
+    2. **텍스트 편집**: `LaTex Rendering` 아래가 인식된 텍스트를 LaTex 형식으로 다시 렌더링한 결과이므로, 이 내용을 참고해서 잘못 인식된 부분을 수정합니다.
+    3. **문제별 결과 저장**: 편집된 내용을 확인한 후, 화면 오른쪽 Answer List에서 각 문제마다 있는 텍스트 영역에 해당 문제의 답을 입력한 후 `Save` 버튼을 누릅니다.
+    4. **최종 결과 저장**: 화면 오른쪽 맨 아래의 `Save All as HTML` 버튼을 클릭한 후, 왼쪽 사이드바를 열면 HTML 파일로 다운로드할 수 있습니다.
+
+    #### 📌 TIP:
+    - 이미지 인식 모델의 실행은 사용자 환경에 영향을 받기 때문에, 저사양 환경에서는 OCR 결과가  오래 걸리는 것이   로딩이 오래 걸릴 경우 정상입니다
+    - 이미지 인식 결과는 캡처한 이미지의 화질에 유의한 영향을 받습니다. 가능하면 이미지를 화면에 큰 사이즈로 띄워둔 상태에서 고품질로 캡처한 후 붙여넣으면 인식 성능이 향상됩니다.
+    - 수식은 LaTeX 형식으로 표시됩니다.
+    - 한번에 전체 화면의 캡처가 어렵다면, 절반씩 나눠서 캡처하는 방식을 고려해 보세요. (첫 번째 캡처 결과를 복사해서 갖고 있으면 됩니다.) 이렇게 하면 긴 이미지도 고품질로 인식하기가 쉬워집니다!
+    - 문제의 선지에 1, 2, 3, 4 등의 인덱스를 수동으로 추가하면 ChatGPT의 정답률(?)이 비교적 향상됩니다.
+    """)
+
 left_column, right_column = st.columns(2)
 p2t = Pix2Text()
 
@@ -62,7 +86,7 @@ with left_column:
                 st.error(f"Error while OCR: {e}")
                 st.session_state['ocr_text'] = ""
         
-        editable_ocr_text = st.text_area("Output Text", value=st.session_state.get('ocr_text', ''), height=150)
+        editable_ocr_text = st.text_area("Output Text", value=st.session_state.get('ocr_text', ''), height=250)
 
         if editable_ocr_text != st.session_state.get('ocr_text', ''):
             st.session_state['ocr_text'] = editable_ocr_text
@@ -84,23 +108,23 @@ with right_column:
         save_button, delete_button = button_cols[0], button_cols[1]
 
         with save_button:
-            if st.button("Save", key=f"save_{index}"):
+            if st.button("✅Save", key=f"save_{index}"):
                 st.session_state.list_items[index] = {"text": text_input, "ocr": st.session_state['ocr_text']}
 
         with delete_button:
-            if st.button("Delete", key=f"delete_{index}"):
+            if st.button("❌Delete", key=f"delete_{index}"):
                 st.session_state.list_items[index] = {}
 
         if st.session_state.list_items[index]:
             st.json(st.session_state.list_items[index])
 
-    st.subheader("Save")
+    st.subheader("❗Solve All?")
     save_button_cols = st.columns(1)
     save_all_markdown_button = save_button_cols[0]
 
 
 with save_all_markdown_button:
-    if st.button("Save All as HTML"):
+    if st.button("🕒Save All as HTML"):
         html_text = """
         <!DOCTYPE html>
         <html>
@@ -136,7 +160,7 @@ with save_all_markdown_button:
         b64_html = base64.b64encode(html_text.encode()).decode()
         current_date = datetime.now().strftime("beta-%m-%d")
         filename = f"{current_date}.html"
-        href = f'<a href="data:text/html;base64,{b64_html}" download="{filename}">Download HTML file</a>'
+        href = f'<a href="data:text/html;base64,{b64_html}" download="{filename}">🕒 Download HTML file</a>'
         
         st.sidebar.markdown(href, unsafe_allow_html=True)
         st.sidebar.markdown(html_text, unsafe_allow_html=True)
