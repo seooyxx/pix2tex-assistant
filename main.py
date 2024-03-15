@@ -53,10 +53,10 @@ def perform_ocr(_image):
     p2t = load_model()
     outs = p2t.recognize(_image)
     #print("OCR Output:", outs)  
-    ocr_text = merge_line_texts(outs, auto_line_break=True)
+    #ocr_text = merge_line_texts(outs, auto_line_break=True)
     #print("merge_line_texts Output:", ocr_text)  
-    ocr_text = replace_radio_buttons_with_numbers(ocr_text)
-    #ocr_text = replace_radio_buttons_with_numbers(outs)
+    #ocr_text = replace_radio_buttons_with_numbers(ocr_text)
+    ocr_text = replace_radio_buttons_with_numbers(outs)
     return ocr_text
 
 @st.cache_data
