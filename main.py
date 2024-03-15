@@ -50,7 +50,7 @@ def perform_ocr(_image):
     #print("merge_line_texts Output:", ocr_text)  
     #ocr_text = replace_radio_buttons_with_numbers(ocr_text)
     ocr_text = replace_radio_buttons_with_numbers(outs)
-    return outs
+    return ocr_text
 
 def generate_image_hash(image):
     with BytesIO() as buffer:
