@@ -34,7 +34,7 @@ left_column, right_column = st.columns(2)
 p2t = Pix2Text()
 
 def replace_radio_buttons_with_numbers(text):
-    symbols = ['o ', '® ', '回 ', 'D ', 
+    symbols = [' O ', 'o ', '® ', '回 ', 'D ', 
                'o\n', 'O\n', '®\n', '回\n', 'D\n']
     idx = 1
     for symbol in symbols:
