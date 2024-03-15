@@ -13,17 +13,18 @@ st.set_page_config(layout="wide")
 with st.expander("📕Guideline"):
 	st.markdown("""
     #### 📌 NOTE:
-    부득이한 경우가 아니라면 사용 중 **❌절대 새로고침을 하지 마세요❌**! 모든 저장 결과가 초기화됩니다.
+    - 사용 중 **❌절대 새로고침을 하지 마세요❌**! 모든 저장 결과가 초기화됩니다.
+    - 반드시 `Save All as HTML` 버튼을 눌러 전체 결과를 저장한 이후, `Remove All Status` 버튼을 눌러 주세요. 
              
     #### ❓How to Use? :
     0. **이미지 캡처 단축키**: (Window) `Window` + `Shift` + `S` / (Mac) `Shift` + `⌘`+ `4` 
     1. **이미지 입력**: 이미지 캡처 후, 다운 받을 필요 없이 `🖼️ Paste LaTex & English image` 버튼을 누르면 클립보드에 있는 이미지가 자동으로 불러와집니다.
-    2. **텍스트 편집**: `LaTex Rendering` 아래가 인식된 텍스트를 LaTex 형식으로 다시 렌더링한 결과이므로, 이 내용을 참고해서 잘못 인식된 부분을 수정합니다.
-    3. **문제별 결과 저장**: 편집된 내용을 확인한 후, 화면 오른쪽 Answer List에서 각 문제마다 있는 텍스트 영역에 해당 문제의 답을 입력한 후 `Save` 버튼을 누릅니다.
-    4. **최종 결과 저장**: 화면 오른쪽 맨 아래의 `Save All as HTML` 버튼을 클릭한 후, 왼쪽 사이드바를 열면 HTML 파일로 다운로드할 수 있습니다.
+    2. **텍스트 편집**: `LaTex Rendering`은 인식된 텍스트를 LaTex 형식으로 다시 렌더링한 결과이므로, 이 내용을 참고해서 잘못 인식된 부분을 수정합니다.
+    3. **문제별 결과 저장**: 화면 오른쪽 Answer List의 각 문제별 텍스트 영역에 해당 문제의 답을 입력한 후 `Save` 버튼을 누릅니다.
+    4. **최종 결과 저장**: 화면 오른쪽 맨 아래의 `Save All as HTML` 버튼을 클릭한 후, 왼쪽 사이드바를 열면 HTML 파일 다운로드 버튼이 활성화됩니다.
 
     #### 📌 TIP:
-    - 이미지 인식 모델의 실행은 사용자 환경에 영향을 받기 때문에, 저사양 환경에서는 이미지 입력 후 OCR Results 출력까지 시간(약 5-10초)이 소요되는 것이 정상입니다.
+    - 이미지 인식 모델의 실행 속도는 사용자 환경에 영향을 받습니다. 저사양 환경에서는 맨 처음 이미지 입력 후 OCR Results 출력까지 시간이 약간 더 소요될 수 있습니다.
     - 이미지 인식 결과는 캡처한 이미지의 화질에 유의한 영향을 받습니다. 가능하면 이미지를 화면에 큰 사이즈로 띄워둔 상태에서 고품질로 캡처한 후 붙여넣으면 인식 성능이 향상됩니다.
     - 수식은 LaTeX 형식으로 표시됩니다.
     - 한번에 전체 화면의 캡처가 어렵다면, 절반씩 나눠서 캡처하는 방식을 고려해 보세요. (첫 번째 캡처 결과를 복사해서 갖고 있으면 됩니다.) 이렇게 하면 긴 이미지도 고품질로 인식하기가 쉬워집니다!
@@ -31,7 +32,11 @@ with st.expander("📕Guideline"):
     """)
 
 left_column, right_column = st.columns(2)
-p2t = Pix2Text()
+
+@st.cache_resource
+def load_model():
+    p2t = Pix2Text()
+    return p2t
 
 def replace_radio_buttons_with_numbers(text):
     symbols = [' O ', ' o ', '® ', '回 ', ' D ', 
@@ -43,18 +48,21 @@ def replace_radio_buttons_with_numbers(text):
             idx = idx % 4 + 1 
     return text
 
+@st.cache_data(persist="disk")
 def perform_ocr(_image):
+    p2t = load_model()
     outs = p2t.recognize(_image)
     #print("OCR Output:", outs)  
-    #ocr_text = merge_line_texts(outs, auto_line_break=True)
+    ocr_text = merge_line_texts(outs, auto_line_break=True)
     #print("merge_line_texts Output:", ocr_text)  
-    #ocr_text = replace_radio_buttons_with_numbers(ocr_text)
-    ocr_text = replace_radio_buttons_with_numbers(outs)
+    ocr_text = replace_radio_buttons_with_numbers(ocr_text)
+    #ocr_text = replace_radio_buttons_with_numbers(outs)
     return ocr_text
 
-def generate_image_hash(image):
+@st.cache_data
+def generate_image_hash(_image):
     with BytesIO() as buffer:
-        image.save(buffer, format="PNG") 
+        _image.save(buffer, format="PNG") 
         return hashlib.md5(buffer.getvalue()).hexdigest()
 
 with left_column:
@@ -68,6 +76,9 @@ with left_column:
     )
 
     if paste_result.image_data is not None:
+        perform_ocr.clear()
+        generate_image_hash.clear()
+
         st.success("Image input")
         st.image(paste_result.image_data)
         image = paste_result.image_data
@@ -181,3 +192,8 @@ with save_all_markdown_button:
         
         st.sidebar.markdown(href, unsafe_allow_html=True)
         st.sidebar.markdown(html_text, unsafe_allow_html=True)
+
+    if st.button("🗑️Remove All Status"):
+        st.cache_data.clear()
+        st.cache_resource.clear()
+        st.success("All cache removed successfully!")
