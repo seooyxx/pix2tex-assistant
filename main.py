@@ -5,6 +5,7 @@ import numpy as np
 import streamlit as st
 from PIL import Image
 from io import BytesIO
+from datetime import datetime
 from pix2text import Pix2Text, merge_line_texts  
 from streamlit_paste_button import paste_image_button as pbutton
 
@@ -13,7 +14,8 @@ left_column, right_column = st.columns(2)
 p2t = Pix2Text()
 
 def replace_radio_buttons_with_numbers(text):
-    symbols = ['O ', '® ', '回 ', 'D ', 'O\n', '®\n', '回\n', 'D\n']
+    symbols = ['o ', '® ', '回 ', 'D ', 
+               'o\n', 'O\n', '®\n', '回\n', 'D\n']
     idx = 1
     for symbol in symbols:
         while symbol in text:
@@ -38,7 +40,7 @@ with left_column:
     st.header("Question OCR")
     paste_result = pbutton(
         text_color="#000000",
-        label="🖼️ Paste mixed images with both text and formulas",
+        label="🖼️ Paste LaTex & English image",
         background_color="#F0F2F6",
         hover_background_color="#BCCBDA",
         errors="raise",
@@ -132,7 +134,9 @@ with save_all_markdown_button:
         html_text += "</body></html>"
 
         b64_html = base64.b64encode(html_text.encode()).decode()
-        href = f'<a href="data:text/html;base64,{b64_html}" download="all_data.html">Download HTML file</a>'
+        current_date = datetime.now().strftime("beta-%m-%d")
+        filename = f"{current_date}.html"
+        href = f'<a href="data:text/html;base64,{b64_html}" download="{filename}">Download HTML file</a>'
         
         st.sidebar.markdown(href, unsafe_allow_html=True)
         st.sidebar.markdown(html_text, unsafe_allow_html=True)
